@@ -1,0 +1,132 @@
+name: Automatically Merge Branches
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+on:
+  workflow_dispatch:
+
+jobs:
+  robust-octopus-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Reset Merge-Testing Branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MASTER_BRANCH="master"
+          TESTING_BRANCH="merge-testing"
+
+          echo "Fetching latest master branch..."
+          git fetch origin $MASTER_BRANCH
+
+          echo "Resetting merge-testing branch to match master..."
+          git checkout -B $TESTING_BRANCH origin/$MASTER_BRANCH
+          git push origin $TESTING_BRANCH --force
+          echo "Merge-testing branch reset successfully."
+
+      - name: Perform Robust Octopus Merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO=${{ github.repository }}
+          TESTING_BRANCH="merge-testing"
+          MERGEABLE_BRANCHES=()
+          IGNORED_BRANCHES=()
+          FAILED_BRANCHES=()
+          MERGED_BRANCHES=()
+          ATTEMPT_LIMIT=5
+          ATTEMPT_COUNT=0
+
+          function evaluate_branches() {
+            MERGEABLE_BRANCHES=()
+            IGNORED_BRANCHES=()
+
+            echo "Fetching PRs from GitHub..."
+            PRS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/$REPO/pulls?state=open")
+
+            if [ -z "$PRS" ]; then
+                echo "No PRs found or failed to fetch data."
+                exit 1
+            fi
+
+            echo "Evaluating PRs for merging..."
+            while read -r PR_NUM PR_BRANCH IS_DRAFT; do
+                echo "Checking PR #$PR_NUM | Branch: $PR_BRANCH | Draft: $IS_DRAFT"
+            
+                if [ "$IS_DRAFT" == "true" ]; then
+                    echo "Skipping draft PR #$PR_NUM ($PR_BRANCH)"
+                    continue
+                fi
+            
+                MERGEABLE=$(curl -s "https://api.github.com/repos/$REPO/pulls/$PR_NUM" | jq -r '.mergeable')
+            
+                echo "Mergeable status: $MERGEABLE"
+
+                if [[ " ${MERGED_BRANCHES[@]} " =~ " $PR_BRANCH " || " ${FAILED_BRANCHES[@]} " =~ " $PR_BRANCH " ]]; then
+                  continue
+                fi
+                
+                if [ "$MERGEABLE" == "true" ]; then
+                    MERGEABLE_BRANCHES+=("$PR_BRANCH")
+                    echo "Added $PR_BRANCH. Current MERGEABLE_BRANCHES: ${MERGEABLE_BRANCHES[*]}"
+                else
+                    IGNORED_BRANCHES+=("$PR_BRANCH")
+                    echo "Ignored $PR_BRANCH. Current IGNORED_BRANCHES: ${IGNORED_BRANCHES[*]}"
+                fi
+            done <<< "$(echo "$PRS" | jq -rc '.[] | "\(.number) \(.head.ref) \(.draft)"')"
+          }
+
+          git checkout $TESTING_BRANCH
+
+          evaluate_branches
+
+          while [ ${#MERGEABLE_BRANCHES[@]} -gt 1 ] && [ $ATTEMPT_COUNT -lt $ATTEMPT_LIMIT ]; do
+              ATTEMPT_COUNT=$((ATTEMPT_COUNT + 1))
+              echo "Attempt $ATTEMPT_COUNT: Eligible branches for octopus merge: ${MERGEABLE_BRANCHES[*]}"
+          
+              MERGE_SUCCESSFUL=true
+          
+              # Fetch each branch before merging
+              for branch in "${MERGEABLE_BRANCHES[@]}"; do
+                  echo "Fetching latest for branch: $branch"
+                  git fetch origin "$branch" || { echo "Failed to fetch $branch, skipping"; continue; }
+              
+                  # Ensure branch exists locally
+                  if ! git rev-parse --verify "$branch" >/dev/null 2>&1; then
+                      echo "Branch $branch not found locally. Checking out from origin..."
+                      git checkout -b "$branch" "origin/$branch" || { echo "Failed to checkout $branch, skipping"; continue; }
+                  else
+                      git checkout "$branch"
+                  fi
+              done
+
+              git config --global user.name "GitHub Actions"
+              git config --global user.email "actions@github.com"
+              
+              git checkout "$TESTING_BRANCH"
+              git merge --squash "${MERGEABLE_BRANCHES[@]}" || MERGE_SUCCESSFUL=false
+          
+              if $MERGE_SUCCESSFUL; then
+                  MERGED_BRANCHES+=("${MERGEABLE_BRANCHES[@]}")
+                  COMMIT_MESSAGE="Merge eligible PRs"
+                  COMMIT_DESCRIPTION="Merged branches:\n${MERGED_BRANCHES[*]}\n\nIgnored branches due to conflicts:\n${IGNORED_BRANCHES[*]}\n\nFailed attempted branches:\n${FAILED_BRANCHES[*]}"
+                  echo -e "$COMMIT_DESCRIPTION" > merge_description.txt
+                  git commit -F merge_description.txt
+                  git push origin $TESTING_BRANCH
+                  echo "Merge successful!"
+              else
+                  echo "Merge failed. Re-evaluating branches..."
+                  FAILED_BRANCHES+=("${MERGEABLE_BRANCHES[@]}")
+              fi
+          
+              evaluate_branches
+          done
+
+          echo "Merge process completed!"
+          echo "Successfully merged branches: ${MERGED_BRANCHES[@]}"
+          echo "Ignored branches due to conflicts: ${IGNORED_BRANCHES[@]}"
+          echo "Failed attempted branches: ${FAILED_BRANCHES[@]}"
