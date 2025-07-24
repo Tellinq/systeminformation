@@ -90,6 +90,12 @@ For major (breaking) changes - **version 4, 3 and 2** - see end of page.
 
 | Version | Date       | Comment                                                                                             |
 | ------- | ---------- | --------------------------------------------------------------------------------------------------- |
+| 5.27.7  | 2025-06-28 | `time()` fixed Intl issue                                                                           |
+| 5.27.6  | 2025-06-20 | `system()` added model (freebsd)                                                                    |
+| 5.27.5  | 2025-06-19 | `system()` added serial, uuid, virtual (freebsd)                                                    |
+| 5.27.4  | 2025-06-19 | `uuid()` fixed os, hardware uuids (freebsd)                                                         |
+| 5.27.3  | 2025-06-17 | `osInfo()` added macOS Tahoe detection                                                              |
+| 5.27.2  | 2025-06-16 | `services()` extended matching service names                                                        |
 | 5.27.1  | 2025-05-24 | `wifiConnections()`, `wifiNetworks()` fix security mode parsing (macOS)                             |
 | 5.27.0  | 2025-05-24 | `mem()` added reclaimable (Linux, macOS)                                                            |
 | 5.26.2  | 2025-05-23 | `memLayout()` manufacturers reference updated                                                       |
