@@ -44,6 +44,64 @@
             <div class="col-12 sectionheader">
               <div class="title">Security Advisories</div>
               <div class="text">
+                <h2>networkInterfaces() Command Injection Vulnerability</h2>
+                <p><span class="bold">Affected versions:</span>
+                  &lt; 5.31.6<br>
+                  <span class="bold">Date:</span> 2026-05-06<br>
+                  <span class="bold">CVE indentifier</span> CVE-2026-44724
+                </p>
+
+                <h4>Impact</h4>
+                <p>We had an issue that there was a possibility to perform a potential command injection possibility by craft the active NetworkManager connection profile name to contains shell metacharacters on linux machines.</p>
+
+                <h4>Patch</h4>
+                <p>Problem was fixed with parameter checking and execFile. If you are using version 5, please upgrade to version >= 5.31.6.</p>
+                <hr>
+                <br>
+
+                <h2>versions() Command Injection Vulnerability</h2>
+                <p><span class="bold">Affected versions:</span>
+                  &lt; 5.31.0<br>
+                  <span class="bold">Date:</span> 2026-02-15<br>
+                  <span class="bold">CVE indentifier</span> CVE-2026-26318
+                </p>
+
+                <h4>Impact</h4>
+                <p>We had an issue that there was a possibility to perform a potential command injection possibility by craft the malicious file path for postgres that is then used in <span class="code">versions()</span> on linux machines.</p>
+
+                <h4>Patch</h4>
+                <p>Problem was fixed with parameter checking and execFile. If you are using version 5, please upgrade to version >= 5.31.0.</p>
+                <hr>
+                <br>
+                <h2>wifiNetworks Command Injection Vulnerability</h2>
+                <p><span class="bold">Affected versions:</span>
+                  &lt; 5.30.8<br>
+                  <span class="bold">Date:</span> 2026-02-14<br>
+                  <span class="bold">CVE indentifier</span> CVE-2026-26280
+                </p>
+
+                <h4>Impact</h4>
+                <p>We had an issue that there was a possibility to perform a potential command injection possibility by manipulating SSIDs in <span class="code">wifiNetworks()</span> on linux machines.</p>
+
+                <h4>Patch</h4>
+                <p>Problem was fixed with parameter checking. If you are using version 5, please upgrade to version >= 5.30.8.</p>
+                <hr>
+                <br>
+
+                <h2>fsSize Command Injection Vulnerability</h2>
+                <p><span class="bold">Affected versions:</span>
+                  &lt; 5.27.14<br>
+                  <span class="bold">Date:</span> 2025-12-16<br>
+                  <span class="bold">CVE indentifier</span> CVE-2025-68154
+                </p>
+
+                <h4>Impact</h4>
+                <p>We had an issue that there was a possibility to perform a potential command injection possibility by manipulating Win32_logicaldisk input in <span class="code">fsSize()</span> on windows machines.</p>
+
+                <h4>Patch</h4>
+                <p>Problem was fixed with parameter checking. If you are using version 5, please upgrade to version >= 5.27.14.</p>
+                <hr>
+                <br>
                 <h2>SSID Command Injection Vulnerability</h2>
                 <p><span class="bold">Affected versions:</span>
                   &lt; 5.23.7<br>
@@ -243,8 +301,7 @@
           </div>
         </div>
       </div>
-  </div>
-  </section>
+    </section>
   </div>
   <footer class="container-fluid footer">
     <div class="container">
@@ -275,7 +332,7 @@
             <li><a href="trademarks.html">Trademarks</a></li>
             <li>&nbsp;</li>
             <li><a href="copyright.html">Copyright &amp; License&nbsp;&nbsp;<img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="MIT license" /></a></li>
-            <li><a href="https://www.plus-innovations.com">&copy; 2025 Sebastian Hildebrandt</a></li>
+            <li><a href="https://www.plus-innovations.com">&copy; 2026 Sebastian Hildebrandt</a></li>
             <li><a href="https://www.plus-innovations.com">+innovations GmbH</a></li>
           </ul>
         </div>
